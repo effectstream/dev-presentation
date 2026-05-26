@@ -1,0 +1,599 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>EffectStream — Build Multi-Chain dApps</title>
+
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/reset.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/reveal.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/theme/black.css" id="theme" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/plugin/highlight/monokai.css" />
+
+    <!-- Official EffectStream fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" />
+
+    <style>
+      /* ===== Official EffectStream palette (effectstream-home) ===== */
+      :root {
+        --bg: #0d0d12;
+        --bg-subtle: #13131a;
+        --surface: rgba(255, 255, 255, 0.04);
+        --surface-hover: rgba(255, 255, 255, 0.07);
+        --border: rgba(255, 255, 255, 0.08);
+        --border-hover: rgba(255, 255, 255, 0.15);
+        --cyan: #06d6a0;     /* primary accent */
+        --purple: #8b5cf6;   /* secondary accent */
+        --magenta: #ec4899;  /* highlight */
+        --teal: #19b17b;
+        --text: #f0f0f5;
+        --text-secondary: rgba(240, 240, 245, 0.55);
+        --text-tertiary: rgba(240, 240, 245, 0.35);
+        --warn: #f59e0b;
+      }
+      .reveal-viewport { background: var(--bg); }
+      .reveal {
+        font-family: "Inter", -apple-system, "Segoe UI", Roboto, sans-serif;
+        font-size: 30px; color: var(--text);
+      }
+      .reveal h1, .reveal h2, .reveal h3 {
+        font-family: "Outfit", "Inter", sans-serif;
+        text-transform: none; letter-spacing: -0.02em; color: var(--text);
+      }
+      .reveal h1 { font-size: 1.9em; font-weight: 700; }
+      .reveal h2 { font-size: 1.35em; font-weight: 600;
+        background: linear-gradient(135deg, var(--cyan), var(--purple));
+        -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;
+      }
+      .reveal h3 { color: var(--purple); font-size: 1.0em; font-weight: 600; }
+      .gradient { background: linear-gradient(135deg, var(--cyan), var(--purple));
+        -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
+      .reveal section img { border: none; box-shadow: none; background: transparent; }
+      .reveal strong { color: var(--cyan); }
+      .reveal em { color: var(--purple); font-style: normal; }
+      .reveal code { font-family: "JetBrains Mono", monospace; }
+      .reveal pre { width: 100%; font-size: 0.55em; box-shadow: none; }
+      .reveal pre code { max-height: 520px; border-radius: 12px; padding: 16px;
+        font-family: "JetBrains Mono", monospace; }
+      .reveal ul { width: 100%; }
+      .reveal li { margin: 0.25em 0; }
+      .reveal a { color: var(--cyan); }
+      .tag {
+        display: inline-block; padding: 3px 14px; border-radius: 999px;
+        font-size: 0.5em; letter-spacing: 0.1em; text-transform: uppercase; font-weight: 600;
+        background: rgba(6, 214, 160, 0.10); color: var(--cyan);
+        border: 1px solid rgba(6, 214, 160, 0.30); margin-bottom: 0.5em;
+      }
+      .muted { color: var(--text-secondary); }
+      .small { font-size: 0.7em; }
+      .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1.0em; align-items: stretch; text-align: left; }
+      .grid3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 0.9em; align-items: stretch; }
+      .card {
+        background: var(--surface); border: 1px solid var(--border);
+        border-radius: 16px; padding: 0.7em 0.95em; text-align: left;
+      }
+      .card h3 { margin: 0 0 0.25em; }
+      .flow {
+        display: flex; align-items: center; justify-content: center; gap: 0.5em;
+        flex-wrap: wrap; font-size: 0.8em; margin: 0.6em 0;
+      }
+      .flow .node {
+        background: rgba(6, 214, 160, 0.08); border: 1px solid rgba(6, 214, 160, 0.30);
+        border-radius: 12px; padding: 0.5em 0.8em; color: var(--text);
+      }
+      .flow .arrow { color: var(--purple); font-size: 1.4em; }
+      .reveal table { font-size: 0.62em; }
+      .reveal table th { color: var(--cyan); }
+      .play { color: var(--cyan); font-weight: 600; }
+      .kbd { font-family: "JetBrains Mono", monospace; background:#1c1c24; border:1px solid var(--border-hover); border-radius:6px; padding:1px 7px; font-size:0.8em; }
+
+      /* ===== "Shape of it" pipeline diagram ===== */
+      .pipe { display: flex; flex-direction: column; align-items: center; gap: 0.35em; margin-top: 0.4em; }
+      .pipe .layer {
+        width: 88%; border-radius: 14px; padding: 0.55em 0.8em; text-align: center;
+        background: var(--surface); border: 1px solid var(--border);
+      }
+      .pipe .layer .lbl { font-size: 0.5em; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-tertiary); display:block; margin-bottom: 0.25em; }
+      .pipe .chains { display: flex; flex-wrap: wrap; gap: 0.4em; justify-content: center; }
+      .pipe .chip {
+        font-size: 0.62em; padding: 0.2em 0.7em; border-radius: 999px;
+        background: rgba(255,255,255,0.05); border: 1px solid var(--border-hover); color: var(--text);
+      }
+      .pipe .arrow { color: var(--purple); font-size: 1.1em; line-height: 1; }
+      .pipe .engine { border-color: rgba(6,214,160,0.35); background: rgba(6,214,160,0.07); }
+      .pipe .stm { border-color: rgba(139,92,246,0.40); background: rgba(139,92,246,0.08); }
+      .pipe .note { font-size: 0.62em; color: var(--text-secondary); }
+      .batch-loop { font-size: 0.6em; color: var(--magenta); margin-top: 0.3em; }
+    </style>
+  </head>
+  <body>
+    <div class="reveal">
+      <div class="slides">
+
+        <!-- ===================== TITLE ===================== -->
+        <section data-background-gradient="radial-gradient(ellipse at 50% 35%, #16162200 0%, #0d0d12 70%), linear-gradient(135deg, #0d0d12 0%, #13131a 55%, #160f24 100%)">
+          <span class="tag">Multi-Chain Web3 Engine</span>
+          <h1 class="gradient">EffectStream</h1>
+          <h3 style="color:var(--text); opacity:0.85; margin-top:-0.1em;">Build multi-chain dApps without the bridges</h3>
+          <p class="muted small" style="margin-top:1.2em;">A Web3 engine for dApps, games &amp; autonomous worlds<br/>EVM · Midnight · Cardano · Bitcoin · Celestia · Avail · NEAR</p>
+          <aside class="notes">
+            Intro: I'm Eddie. Today — what multi-chain dApps are and why they're hard, how EffectStream
+            solves it, a couple of demos that are live today, then I'll launch a cross-chain template
+            from scratch, and finish with how you can try it. Roughly 25 minutes, then Q&amp;A.
+            Presenting tip: S opens speaker notes, arrow keys move.
+          </aside>
+        </section>
+
+        <!-- ===================== AGENDA ===================== -->
+        <section>
+          <h2>What we'll cover</h2>
+          <div class="grid2" style="font-size:0.85em;">
+            <ul>
+              <li><strong>1.</strong> Why multi-chain dApps</li>
+              <li><strong>2.</strong> How EffectStream works</li>
+              <li><strong>3.</strong> Demos in the wild</li>
+            </ul>
+            <ul>
+              <li><strong>4.</strong> <span class="play">Live:</span> launch an EVM + Midnight template</li>
+              <li><strong>5.</strong> Tools, links, try it yourself</li>
+            </ul>
+          </div>
+          <p class="muted small">Open source · TypeScript · one command to run a full local multi-chain stack</p>
+          <aside class="notes">
+            Five parts. I'll keep the slides light and spend the real time on the live launch in part 4.
+            If the demo gods are kind, you'll see a fresh app reading two chains at once in about ten minutes.
+          </aside>
+        </section>
+
+        <!-- ===================== SEGMENT 1: WHY ===================== -->
+        <section>
+          <section data-background-color="#13131a">
+            <span class="tag">Part 1</span>
+            <h2>Why multi-chain dApps?</h2>
+            <p class="muted">Context, and the problem everyone keeps hitting</p>
+            <aside class="notes">Three minutes of context. What's broken about building on-chain apps today.</aside>
+          </section>
+
+          <section>
+            <h2>The problem with "pick one chain"</h2>
+            <ul>
+              <li>Your users &amp; liquidity are <strong>spread across many chains</strong> — pick one and you cut off the rest.</li>
+              <li>The usual fix is <em>bridging</em> assets over… and bridges are the <strong>#1 hack target</strong> in crypto — it's hard to do right.</li>
+              <li><strong>No single chain has it all</strong> — some are slow, some expensive, some lack the assets, or the features your app needs.</li>
+              <li>Every chain has its own VM, wallets, tooling → supporting another chain means a <strong>rewrite</strong>.</li>
+            </ul>
+            <aside class="notes">
+              Set up the pain. Liquidity is fragmented. The dominant cross-chain UX is asking a user to bridge,
+              and bridges are hard to get right — they hold custody and have been drained for billions. And no
+              single chain has everything: some are slow, some expensive, some don't have the assets or features
+              you need. So devs either commit to one chain or rewrite for each — both bad.
+            </aside>
+          </section>
+
+          <section>
+            <h2>What people actually want</h2>
+            <div class="flow">
+              <span class="node">Reach users<br/>on every chain</span>
+              <span class="arrow">+</span>
+              <span class="node">Use each chain's<br/>strengths</span>
+              <span class="arrow">+</span>
+              <span class="node">No bridging<br/>No custody risk</span>
+            </div>
+            <ul class="small">
+              <li><strong>EVM</strong> — deep markets &amp; existing tokens &nbsp;·&nbsp; <strong>Midnight</strong> — privacy / ZK</li>
+              <li><strong>Celestia</strong> — cheap data availability &nbsp;·&nbsp; <strong>Cardano</strong> — native assets</li>
+            </ul>
+            <p style="margin-top:0.6em;">A <strong>multi-chain dApp</strong> = one app that <em>reads from many chains</em> and folds them into <strong>one consistent state</strong>.</p>
+            <aside class="notes">
+              Flip to what we want. Use each chain for what it's best at — EVM for markets and tokens,
+              Midnight for privacy, Celestia for cheap DA, Cardano for native assets — without forcing users
+              to move funds. That's the definition I'll use: one app, reads many chains, one consistent state.
+              That's exactly what EffectStream lets you build.
+            </aside>
+          </section>
+        </section>
+
+        <!-- ===================== SEGMENT 2: HOW ===================== -->
+        <section>
+          <section data-background-color="#13131a">
+            <span class="tag">Part 2</span>
+            <h2>How EffectStream manages it</h2>
+            <p class="muted">The short tech version</p>
+            <aside class="notes">Four minutes. The core mental model and the three pieces that make it work.</aside>
+          </section>
+
+          <section>
+            <h2>The core model</h2>
+            <div class="flow" style="font-size:0.95em;">
+              <span class="node">Many chains<br/><span class="muted small">EVM · Midnight · …</span></span>
+              <span class="arrow">→</span>
+              <span class="node">Sync layer<br/><span class="muted small">normalize blocks</span></span>
+              <span class="arrow">→</span>
+              <span class="node">State machine<br/><span class="muted small">your TS logic</span></span>
+              <span class="arrow">→</span>
+              <span class="node">Indexed state<br/><span class="muted small">SQL / API</span></span>
+            </div>
+            <p>Read from many chains → fold into <strong>one deterministic state machine</strong> → query the result.</p>
+            <p class="small muted">It's a <em>sovereign rollup</em>: inputs are ordered on-chain (data availability), your logic runs in your node, the resulting state is queryable.</p>
+            <aside class="notes">
+              One sentence to remember: read many chains, fold into one deterministic state machine, query the result.
+              The "sovereign rollup" framing: the chains give you ordering and data availability — they store the inputs —
+              but YOUR code decides what those inputs mean. Same inputs, same code, same state on every node. Deterministic.
+            </aside>
+          </section>
+
+          <section>
+            <h2>Three pieces</h2>
+            <div class="grid3">
+              <div class="card">
+                <h3>Sync</h3>
+                <p class="small">Per-chain fetchers (viem for EVM, UTXORpc for Cardano, Midnight SDK, Bitcoin, Celestia…) poll finalized blocks and normalize them into one common format.</p>
+              </div>
+              <div class="card">
+                <h3>State machine</h3>
+                <p class="small">You write a typed <em>grammar</em> of commands + one handler each, in TypeScript. The runtime routes each input and commits SQL <strong>atomically per block</strong>.</p>
+              </div>
+              <div class="card">
+                <h3>Batcher</h3>
+                <p class="small">Users sign inputs and POST them over HTTP. The batcher packs many into <strong>one on-chain tx</strong>. Storage-first — survives crashes.</p>
+              </div>
+            </div>
+            <aside class="notes">
+              Three pieces. Sync: a fetcher per chain that turns very different blocks into one common shape.
+              State machine: this is what you actually write — a grammar of allowed commands, a generator function
+              per command, and every block your yielded SQL queries commit in a single transaction. Batcher: solves
+              throughput — instead of every chess move being its own gas-paying tx, users sign and POST, the batcher
+              bundles them into one transaction, and it persists everything to disk first so nothing is lost.
+            </aside>
+          </section>
+
+          <section>
+            <h2>The payoff: <span style="color:var(--es-ok)">non-custodial</span></h2>
+            <ul>
+              <li>All real interactions land <strong>on the chains</strong>, not inside your node.</li>
+              <li>Users keep <strong>full custody of their L1 assets</strong> the whole time.</li>
+              <li>“<em>Even if your app gets hacked, users' L1 assets are not at risk.</em>”</li>
+            </ul>
+            <p class="small muted">Plus: complex logic runs in TypeScript (not Solidity), so game state, physics, and rich rules are finally practical.</p>
+            <aside class="notes">
+              The big payoff and the differentiator versus most L2s: it's non-custodial. The framework never
+              holds user funds — assets stay on L1. So the blast radius of a bug is your app state, not people's money.
+              That's huge for brands and for trust. And because your logic is TypeScript, not the EVM, you can do things
+              that are impractical on-chain — real physics, real game rules.
+            </aside>
+          </section>
+
+          <section>
+            <h2>The shape of it</h2>
+            <div class="pipe">
+              <div class="layer">
+                <span class="lbl">Chains · ordering + data availability</span>
+                <div class="chains">
+                  <span class="chip">EVM</span><span class="chip">Midnight</span><span class="chip">Cardano</span>
+                  <span class="chip">Bitcoin</span><span class="chip">Celestia</span><span class="chip">Avail</span><span class="chip">NEAR</span>
+                </div>
+              </div>
+              <span class="arrow">▼ <span class="note">primitives watch the events you care about</span></span>
+              <div class="layer engine">
+                <span class="lbl">Sync</span><strong>Normalize every chain → one deterministic order</strong>
+              </div>
+              <span class="arrow">▼</span>
+              <div class="layer stm">
+                <span class="lbl">State machine</span><strong>Your TypeScript logic</strong> — same inputs, same state, every node
+              </div>
+              <span class="arrow">▼</span>
+              <div class="layer">
+                <span class="lbl">Database + API</span>Queryable application state
+              </div>
+              <div class="batch-loop">↳ Batcher: users sign inputs → bundled into one on-chain tx → back to the top</div>
+            </div>
+            <aside class="notes">
+              New, accurate picture — read it top to bottom. The chains at the top only do two jobs: order the inputs
+              and store them (data availability). Primitives are typed watchers that pick out the events you care about.
+              Sync normalizes all those different chains into one deterministic stream. Your TypeScript state machine
+              folds that stream into application state — deterministic, so every node agrees. The result is queryable
+              via a database and API. And the batcher (the pink loop) is how user inputs get on-chain efficiently:
+              sign, bundle, one transaction, which then flows back in at the top.
+            </aside>
+          </section>
+        </section>
+
+        <!-- ===================== SEGMENT 3: DEMOS ===================== -->
+        <section>
+          <section data-background-color="#13131a">
+            <span class="tag">Part 3</span>
+            <h2>Demos in the wild</h2>
+            <p class="muted">Real apps, live today</p>
+            <aside class="notes">Three minutes — three things that are actually deployed, so this isn't just theory.</aside>
+          </section>
+
+          <section>
+            <span class="tag">Game · multichain · Arbitrum + Midnight</span>
+            <h2 style="margin-bottom:0.25em;">Safe Solver</h2>
+            <iframe src="https://drive.google.com/file/d/1KhkfE4dM5dI3Wo0P3Ij8V3rOTLdHaGX1/preview"
+                    style="width:64%; height:400px; border:0; border-radius:14px; box-shadow:0 8px 40px rgba(0,0,0,0.5);"
+                    allow="autoplay" allowfullscreen></iframe>
+            <p class="small" style="margin-top:0.5em;">
+              Same logic over Arbitrum <em>and</em> Midnight blocks · deterministic randomness per block ·
+              <a href="https://safesolver.midnight.fun/" target="_blank" rel="noopener" style="color:var(--cyan); font-weight:600;">play it live ▶</a>
+            </p>
+            <aside class="notes">
+              Safe Solver is the canonical multichain example — the pattern the other templates build on.
+              The same game logic computes over two chains' blocks at once, and the random puzzle is derived
+              deterministically per block so everyone agrees without a server. I'll play the clip rather than
+              host it live; the live link is there if anyone wants to try it after.
+            </aside>
+          </section>
+
+          <section>
+            <span class="tag">Proof at scale · Arbitrum + Cardano</span>
+            <h2 style="margin-bottom:0.25em;">Tarochi</h2>
+            <iframe src="https://drive.google.com/file/d/1--jE8nVOyhrPqh5IWmahys2aCrKn23aI/preview"
+                    style="width:64%; height:380px; border:0; border-radius:14px; box-shadow:0 8px 40px rgba(0,0,0,0.5);"
+                    allow="autoplay" allowfullscreen></iframe>
+            <p class="small" style="margin-top:0.5em;">
+              A fully on-chain autonomous game — the <strong>volume proof</strong>:
+              <strong>over 1M+ transactions</strong>, gas subsidized · 4-layer rollup stack + Cardano DEX · built in GameMaker.
+            </p>
+            <aside class="notes">
+              Tarochi is the "does this actually scale" answer. Over a million transactions, gas subsidized so users
+              didn't feel it. It stacks four layers — Ethereum → Arbitrum → Xai → Tarochi — and also watches Cardano
+              for DEX activity. The takeaway: this isn't a toy — it ran a real game at real volume.
+            </aside>
+          </section>
+
+          <section>
+            <span class="tag">DeFi · Midnight + Celestia</span>
+            <h2 style="margin-bottom:0.25em;">ZSwap-DA</h2>
+            <iframe src="https://drive.google.com/file/d/1vqybh83YG5hR7eeDNlQVNpxSWQrWXqtG/preview"
+                    style="width:64%; height:380px; border:0; border-radius:14px; box-shadow:0 8px 40px rgba(0,0,0,0.5);"
+                    allow="autoplay" allowfullscreen></iframe>
+            <p class="small" style="margin-top:0.5em;">
+              <strong>Atomic token swaps</strong> — offers published to <strong>Celestia</strong> (cheap DA),
+              indexed by sync, settled privately on <strong>Midnight</strong> (ZK). A template you can run today.
+            </p>
+            <aside class="notes">
+              The DeFi example. ZSwap is a decentralized swap platform that uses two chains for what each is good at:
+              Celestia as a cheap data-availability layer to publish the swap offers, and Midnight for private,
+              ZK-verified settlement. Offer goes to Celestia, our sync node indexes it, the swap completes on Midnight.
+              And it's a template in the repo — you can boot it the same way I boot the next one.
+            </aside>
+          </section>
+        </section>
+
+        <!-- ===================== SEGMENT 4: LIVE LAUNCH ===================== -->
+        <section>
+          <section data-background-gradient="linear-gradient(135deg, #160f24 0%, #0d0d12 60%, #0b1f1a 100%)">
+            <span class="tag" style="color:var(--es-ok);border-color:var(--es-ok);background:rgba(74,222,128,0.12)">Part 4 · Live</span>
+            <h2>Launch an EVM + Midnight app</h2>
+            <p class="muted">From <span class="kbd">git clone</span> to a running cross-chain dApp</p>
+            <aside class="notes">
+              The main event. I'll launch the evm-midnight-v2 template. Heads up to me: I pre-booted this ~5 min
+              before going live so it's already synced — see RUNBOOK.md. If anything stalls, I drop to the screenshots
+              on the next slides and narrate.
+            </aside>
+          </section>
+
+          <section>
+            <h2>What we're building</h2>
+            <div class="grid2">
+              <div class="card">
+                <h3>On EVM</h3>
+                <p class="small">An <strong>ERC-721 NFT</strong>. Public ownership, standard <code>Transfer</code> events.</p>
+              </div>
+              <div class="card">
+                <h3>On Midnight</h3>
+                <p class="small">A <strong>private property</strong> added via a ZK circuit — only the owner can run it; the result is published for the app to read.</p>
+              </div>
+            </div>
+            <p style="margin-top:0.6em;">One database unifies both chains. <em>Public token + private metadata, no bridge.</em></p>
+            <aside class="notes">
+              The app: an NFT lives on EVM where ownership is public. A private property — think a hidden stat,
+              a sealed bid, hidden inventory — is set on Midnight through a zero-knowledge circuit only the owner can run.
+              EffectStream watches both and stitches them into one queryable record. This is the "use each chain's
+              strength" idea made concrete.
+            </aside>
+          </section>
+
+          <section>
+            <h2>The whole launch</h2>
+            <pre><code class="language-bash" data-trim data-line-numbers>git clone https://github.com/effectstream/effectstream.git
+cd effectstream/templates/evm-midnight-v2
+
+bun install                # deps
+bun run build:midnight     # compile the ZK (Compact) contract
+
+bun run dev                # 🚀 boots the entire local stack</code></pre>
+            <p class="small muted">One command — <code>bun run dev</code> — orchestrates everything below.</p>
+            <aside class="notes">
+              This is the entire thing. Clone, install, compile the Midnight contract, then bun run dev.
+              In the monorepo I use ./link.sh instead of bun install — that's the only difference, it symlinks
+              local packages. Everything else is identical. Let me run it. (Switch to terminal.)
+            </aside>
+          </section>
+
+          <section>
+            <h2><code>bun run dev</code> brings up</h2>
+            <div class="grid2 small">
+              <ul>
+                <li><strong>PGLite</strong> — the database</li>
+                <li><strong>Hardhat</strong> — local EVM node</li>
+                <li><strong>Midnight</strong> — node + indexer + proof server</li>
+              </ul>
+              <ul>
+                <li><strong>Sync node</strong> — indexes both chains</li>
+                <li><strong>Batcher</strong> — accepts signed inputs</li>
+                <li><strong>Frontend</strong> — the React dApp</li>
+              </ul>
+            </div>
+            <p class="small">The <strong>orchestrator</strong> wires these in dependency order — e.g. contracts deploy only once their chain is ready. Zero manual setup.</p>
+            <p class="small muted">Frontend → <code>localhost:10599</code> · API → <code>localhost:9999</code> · Batcher → <code>localhost:3334</code></p>
+            <aside class="notes">
+              While it boots: that one command just started six things — a database, a local EVM chain, the full
+              Midnight stack with its proof server, our sync node, the batcher, and a React frontend. The orchestrator
+              knows the dependency graph, so contract deployment waits for its chain. This normally takes a small team
+              and a page of docs; here it's one line.
+            </aside>
+          </section>
+
+          <section>
+            <h2>The demo flow</h2>
+            <ol class="small">
+              <li>Open <strong>localhost:10599</strong> → block heights from both chains ticking live.</li>
+              <li><strong>Mint</strong> an ERC-721 on the EVM side.</li>
+              <li>Watch the <strong>sync node index it</strong> in ~a second — it appears in the app.</li>
+              <li>Run the <strong>Midnight ZK circuit</strong> to attach a private property.</li>
+              <li>See the property show up — <strong>one record, two chains</strong>.</li>
+              <li>Optional: hit <code>localhost:9999/api/erc721</code> → raw JSON.</li>
+            </ol>
+            <aside class="notes">
+              The flow I'll click through: open the app, show both chains' blocks advancing. Mint an NFT on EVM —
+              show it landing. Then add the private property via Midnight, watch the batcher submit it and the record
+              update. Finally I'll hit the raw API endpoint so you can see it's real indexed state, not UI mockery.
+            </aside>
+          </section>
+
+          <!-- Screenshot fallback slides (filled after local boot) -->
+          <section>
+            <span class="tag" style="color:var(--es-warn);border-color:var(--es-warn);background:rgba(251,191,36,0.12)">Fallback</span>
+            <h2>The running app</h2>
+            <img src="assets/demo-frontend.png" alt="EVM + Midnight dApp running locally" style="max-height:470px; border-radius:10px;" />
+            <p class="small muted">Live local boot — block height ticking, EVM ↔ Midnight wallet demo, one merged token view.</p>
+            <aside class="notes">
+              This is the real app from a local boot — note the live block height top-right. If the live demo
+              misbehaves live, I narrate over this exactly as if it were live (mint → index → add property),
+              then move on. Rule: never debug live for more than ~30 seconds. See RUNBOOK.md for the click-path.
+            </aside>
+          </section>
+        </section>
+
+        <!-- ===================== SEGMENT 5: TOOLS / LINKS ===================== -->
+        <section>
+          <section data-background-color="#13131a">
+            <span class="tag">Part 5</span>
+            <h2>More tools &amp; how to try it</h2>
+            <aside class="notes">Three minutes to land it: the tooling that makes the DX nice, then exactly how to start.</aside>
+          </section>
+
+          <section>
+            <h2>The toolbox · talking to chains</h2>
+            <div class="grid3 small">
+              <div class="card">
+                <h3>Chains</h3>
+                <p>Full sync for EVM, Midnight, Cardano, Bitcoin, Celestia, Avail, NEAR. Add one by declaring it in your config.</p>
+              </div>
+              <div class="card">
+                <h3>Primitives</h3>
+                <p>Typed event watchers — ERC-20 / ERC-721, Midnight contract state, Bitcoin &amp; Cardano addresses. You declare <em>what</em> to track.</p>
+              </div>
+              <div class="card">
+                <h3>Batcher</h3>
+                <p>Users sign inputs → bundled into <strong>one on-chain tx</strong>. Storage-first, so it's crash-safe.</p>
+              </div>
+            </div>
+            <aside class="notes">
+              First half of the toolbox — getting data in and out of chains. You pick which chains by declaring them
+              in config. Primitives are the typed watchers that say "tell me about ERC-721 transfers" or "watch this
+              Midnight contract." And the batcher is how user inputs go back on-chain efficiently: sign, bundle into
+              one transaction, crash-safe because it persists first.
+            </aside>
+          </section>
+
+          <section>
+            <h2>The toolbox · building your app</h2>
+            <div class="grid3 small">
+              <div class="card">
+                <h3>Sync</h3>
+                <p>Reads the chains <strong>automatically</strong> and orders inputs <em>deterministically</em> — every node computes the same state.</p>
+              </div>
+              <div class="card">
+                <h3>State machine</h3>
+                <p>A grammar of commands + one handler each, in TypeScript. SQL commits atomically per block.</p>
+              </div>
+              <div class="card">
+                <h3>API</h3>
+                <p>Your indexed application state, queryable over HTTP — power any frontend.</p>
+              </div>
+              <div class="card">
+                <h3>Orchestrator</h3>
+                <p>One command runs your whole local multi-chain stack. You declare the processes in your config — run only what your app needs.</p>
+              </div>
+              <div class="card">
+                <h3>@effectstream/wallets</h3>
+                <p>One <code>walletLogin()</code> across MetaMask, Cardano CIP-30, Midnight, Mina, Polkadot, Algorand… polling hidden.</p>
+              </div>
+              <div class="card" style="background:rgba(6,214,160,0.06); border-color:rgba(6,214,160,0.25);">
+                <h3 style="color:var(--cyan)">All TypeScript</h3>
+                <p>No build step in dev — write your logic, run it, iterate.</p>
+              </div>
+            </div>
+            <aside class="notes">
+              Second half — building the app itself. Sync is automatic and deterministic, that's the key word: same
+              inputs and code give the same state on every node. The state machine is what you actually write — a grammar
+              of commands and a handler each, committing SQL per block. The API exposes that state to any frontend. The
+              orchestrator runs the whole local stack from one command — and you control which processes run via config,
+              so you only spin up the chains your app uses. And the wallets package gives you one login call across every
+              ecosystem. It's all TypeScript, no build step in dev.
+            </aside>
+          </section>
+
+          <section>
+            <h2>Give it a try</h2>
+            <pre><code class="language-bash" data-trim>git clone https://github.com/effectstream/effectstream.git
+cd effectstream/templates/evm-midnight-v2
+bun install && bun run build:midnight && bun run dev</code></pre>
+            <div class="grid2 small" style="margin-top:0.6em;">
+              <ul>
+                <li><strong>Code</strong> — github.com/effectstream/effectstream</li>
+                <li><strong>Docs</strong> — effectstream.github.io/docs</li>
+              </ul>
+              <ul>
+                <li><strong>Blog</strong> — /docs/blog</li>
+                <li><strong>Play</strong> — safesolver.midnight.fun</li>
+              </ul>
+            </div>
+            <p class="small muted" style="margin-top:0.6em;">Templates to start from: <code>minimal</code> · <code>evm-midnight-v2</code> · <code>zswap-da</code> · <code>chess-v2</code> · <code>preorder</code></p>
+            <aside class="notes">
+              If you want to play with it after this: three commands and you have what I just demoed running locally.
+              Repo, docs, blog, and the live games are all linked. Pick a template close to what you want — minimal to
+              learn, evm-midnight for cross-chain + privacy, zswap for DeFi, chess for a full game.
+            </aside>
+          </section>
+
+          <section data-background-gradient="linear-gradient(135deg, #0d0d12 0%, #160f24 100%)">
+            <h1 style="font-size:1.3em; margin-bottom:0.1em;">Thank you 🙏</h1>
+            <p class="muted" style="margin-bottom:0.6em;">Questions?</p>
+            <img src="assets/contact-card.png" alt="EffectStream — edward.alvarado@midnight.foundation" style="max-height:330px; border-radius:16px;" />
+            <p class="small" style="margin-top:0.6em;">
+              <a href="https://github.com/effectstream/effectstream" target="_blank" rel="noopener">github.com/effectstream/effectstream</a>
+              &nbsp;·&nbsp;
+              <a href="https://effectstream.github.io/docs" target="_blank" rel="noopener">effectstream.github.io/docs</a>
+            </p>
+            <aside class="notes">
+              That's it — thank you. Happy to take questions — over to the host for the Q&amp;A queue.
+              Backup Q&amp;A talking points: determinism (same inputs+code → same state), how finality is handled
+              per chain, custody (funds never leave L1), and which chains are full-sync vs signature-only today.
+            </aside>
+          </section>
+        </section>
+
+      </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/reveal.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/plugin/notes/notes.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/plugin/highlight/highlight.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/plugin/markdown/markdown.js"></script>
+    <script>
+      Reveal.initialize({
+        hash: true,
+        slideNumber: "c/t",
+        transition: "slide",
+        backgroundTransition: "fade",
+        plugins: [RevealNotes, RevealHighlight, RevealMarkdown],
+      });
+    </script>
+  </body>
+</html>

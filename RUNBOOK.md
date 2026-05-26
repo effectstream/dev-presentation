@@ -1,0 +1,120 @@
+# Live Demo Runbook — EVM + Midnight template
+
+The 10-minute live segment. Goal: go from "nothing running" to a cross-chain dApp where an
+NFT minted on EVM gets a **private property** attached via a Midnight ZK circuit, all unified
+in one database — **without bridging**.
+
+Template: `templates/evm-midnight-v2/`
+
+---
+
+## ⏱️ Before you go live (do this ~5–8 min before your slot)
+
+The full stack takes a few minutes to boot and sync. **Pre-warm it** so that when you switch to
+the terminal while live, blocks are already ticking and the frontend is live. Then while live you
+*talk through* the commands (which are on the slide) while the already-running app does the demo.
+
+> ⚠️ **Order matters when presenting from inside the monorepo** (verified the hard way — see
+> "Monorepo setup gotchas" below). Do these steps in this exact order:
+
+```sh
+# 0. ONE TIME — install workspace deps at the MONOREPO ROOT first.
+#    Without this, the Midnight contract deploy can't resolve @effectstream/utils.
+cd /path/to/effectstream        # monorepo root
+bun install
+
+# 1. Then link local packages INTO the template (must come AFTER the root install,
+#    because the root install resets the Midnight WASM symlinks link.sh fixes).
+cd templates/evm-midnight-v2
+./link.sh
+#    👉 OUTSIDE the monorepo, a normal user just runs `bun install` here instead — no link.sh.
+
+# 2. Compile contracts + db types (each prints "Exited with code 0")
+bun run build:midnight     # compiles the Compact (ZK) circuit
+bun run build:evm          # compiles + generates Solidity bindings
+bun run build:pgtypes      # generates typed SQL queries
+
+# 3. Boot the whole stack
+bun run dev
+```
+
+✅ **Ready when you see:** the frontend at <http://localhost:10599> loads and the block height
+top-right is incrementing. Confirm the API too: <http://localhost:9999/api/erc721> (returns `[]`
+until you mint — that's expected). Boot to "frontend up" took a few minutes on this machine; the
+Midnight step pauses on "Waiting to receive tokens… / Wallet sync progress" while the local devnet
+funds the deploy wallet — that's normal, not a hang.
+
+**Free the ports first if a previous run is still around:**
+```sh
+NODE_ENV=development bunx orchestrator stop   # clean shutdown
+# nuclear option if something is stuck:
+lsof -ti tcp:10599,9999,3334,8545,9944,8088,6300 | xargs kill -9 2>/dev/null
+```
+
+Toolchain prereqs (verified present on this machine): `bun`, `forge`, `compact`, `docker`.
+
+---
+
+## 🎬 While presenting — the narration + click path
+
+You don't need to *run* the commands live (the stack is already warm). Walk the slide, then drive
+the already-running app:
+
+1. **Show the slide** with the 3 commands — "this is the entire setup: clone, install, `bun run dev`."
+2. **Switch to terminal** — point at the orchestrator output: "one command brought up six services —
+   database, a local EVM chain, the full Midnight stack, our sync node, the batcher, and the frontend."
+3. **Open <http://localhost:10599>** — "both chains' block heights are ticking live."
+4. **Mint an ERC-721** on the EVM side (Wallet Demo component) — "public ownership on EVM."
+5. **Watch it index** — "the sync node saw the Transfer event and it's in our database in about a second."
+6. **Add a private property via Midnight** — "only the owner can run this ZK circuit; the result is
+   published for the app to read." Batcher submits it; the record updates.
+7. **Hit the raw API** <http://localhost:9999/api/erc721> — "real indexed state, one record, two chains."
+
+### Ports
+| Service | URL |
+|---|---|
+| Frontend (dApp) | <http://localhost:10599> |
+| Node API | <http://localhost:9999> (e.g. `/api/erc721`) |
+| Batcher | <http://localhost:3334> |
+| Orchestrator API | <http://localhost:4747> (`status`, `logs`, `restart`) |
+| Hardhat EVM | `:8545` · Midnight node `:9944` · indexer `:8088` · proof server `:6300` |
+
+---
+
+## 🛟 Fallback — if anything stalls while live
+
+**Rule: do not debug live for more than ~30 seconds.** Switch to the screenshot slides in the deck
+(Part 4, "If the live boot stalls") and narrate the exact same flow over the captured images, then
+move on. The screenshots were captured from a real local boot, so the story is identical.
+
+Common gotchas:
+- **`Cannot find module '@evm-midnight/...'`** → you ran `bun install` in the monorepo. Use `./link.sh`.
+- **Frontend blank page** → Bun `ws` issue; `.env.dev` already sets `VITE_IS_BUN=true` (HTTP polling). Reload.
+- **Port already in use** → run the `orchestrator stop` / `lsof … kill` block above, then `bun run dev`.
+- **Sync stuck at block 0** → Hardhat isn't mining; restart just that process:
+  `NODE_ENV=development bunx orchestrator restart <name>` (names via `orchestrator status`).
+- **Midnight contract failed to deploy** → check `MIDNIGHT_STORAGE_PASSWORD` complexity in `start.dev.ts`.
+
+## 🧩 Monorepo setup gotchas (hit & solved during prep)
+If you boot from inside the monorepo, these two bite in order:
+
+1. **`Cannot find module '@effectstream/utils/runtime'`** during `midnight-contract` deploy
+   → the monorepo root has no `node_modules`. Run **`bun install` at the repo root** once.
+2. **`Deployment failed: expected instance of ContractMaintenanceAuthority`**
+   → the root `bun install` reset `packages/chains/midnight-contracts/node_modules/@midnight-ntwrk/*`
+   to the root's WASM copies, so two WASM instances are loaded and `instanceof` fails. Fix: **re-run
+   `./link.sh`** in the template (it re-points those symlinks to the template's copies). So the rule
+   is **root `bun install` first, then `link.sh`** — never the other way around.
+
+A clean reproduction from scratch:
+```sh
+cd /path/to/effectstream && bun install            # root deps
+cd templates/evm-midnight-v2 && ./link.sh          # AFTER root install
+bun run build:midnight && bun run build:evm && bun run build:pgtypes
+bun run dev
+```
+
+## 🧹 After the session
+```sh
+NODE_ENV=development bunx orchestrator stop
+```
