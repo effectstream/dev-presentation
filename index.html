@@ -402,15 +402,13 @@
             <pre><code class="language-bash" data-trim data-line-numbers>git clone https://github.com/effectstream/effectstream.git
 cd effectstream/templates/evm-midnight-v2
 
-bun install                # deps
-bun run build:midnight     # compile the ZK (Compact) contract
+bun i          # install dependencies
 
-bun run dev                # 🚀 boots the entire local stack</code></pre>
-            <p class="small muted">One command — <code>bun run dev</code> — orchestrates everything below.</p>
+bun run dev    # 🚀 compiles contracts AND boots the entire local stack</code></pre>
+            <p class="small muted">One command — <code>bun run dev</code> — compiles the contracts and orchestrates everything below.</p>
             <aside class="notes">
-              This is the entire thing. Clone, install, compile the Midnight contract, then bun run dev.
-              In the monorepo I use ./link.sh instead of bun install — that's the only difference, it symlinks
-              local packages. Everything else is identical. Let me run it. (Switch to terminal.)
+              This is the entire thing — straight from the docs: clone, bun i, bun run dev. That last command
+              compiles the contracts and brings up the whole stack. Let me run it. (Switch to terminal.)
             </aside>
           </section>
 
@@ -543,7 +541,7 @@ bun run dev                # 🚀 boots the entire local stack</code></pre>
             <h2>Give it a try</h2>
             <pre><code class="language-bash" data-trim>git clone https://github.com/effectstream/effectstream.git
 cd effectstream/templates/evm-midnight-v2
-bun install && bun run build:midnight && bun run dev</code></pre>
+bun i && bun run dev</code></pre>
             <div class="grid2 small" style="margin-top:0.6em;">
               <ul>
                 <li><strong>Code</strong> — github.com/effectstream/effectstream</li>

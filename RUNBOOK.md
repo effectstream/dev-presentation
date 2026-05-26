@@ -14,44 +14,35 @@ The full stack takes a few minutes to boot and sync. **Pre-warm it** so that whe
 the terminal while live, blocks are already ticking and the frontend is live. Then while live you
 *talk through* the commands (which are on the slide) while the already-running app does the demo.
 
-> ⚠️ **Order matters when presenting from inside the monorepo** (verified the hard way — see
-> "Monorepo setup gotchas" below). Do these steps in this exact order:
+This is the **documented quick-start flow** (see `docs/home/10-quickstart`):
 
 ```sh
-# 0. ONE TIME — install workspace deps at the MONOREPO ROOT first.
-#    Without this, the Midnight contract deploy can't resolve @effectstream/utils.
-cd /path/to/effectstream        # monorepo root
-bun install
+git clone https://github.com/effectstream/effectstream.git
+cd effectstream/templates/evm-midnight-v2
 
-# 1. Then link local packages INTO the template (must come AFTER the root install,
-#    because the root install resets the Midnight WASM symlinks link.sh fixes).
-cd templates/evm-midnight-v2
-./link.sh
-#    👉 OUTSIDE the monorepo, a normal user just runs `bun install` here instead — no link.sh.
-
-# 2. Compile contracts + db types (each prints "Exited with code 0")
-bun run build:midnight     # compiles the Compact (ZK) circuit
-bun run build:evm          # compiles + generates Solidity bindings
-bun run build:pgtypes      # generates typed SQL queries
-
-# 3. Boot the whole stack
-bun run dev
+bun i          # install dependencies
+bun run dev    # compiles contracts AND starts the full local stack
 ```
+
+That's it — `bun run dev` compiles the contracts and brings up every service. No separate build
+steps, no root install, no `link.sh`.
+
+> `link.sh` is **only** for engine development (working on the `@effectstream/*` packages themselves
+> from inside the monorepo). For launching a template — what we're demoing — ignore it and use the
+> flow above.
 
 ✅ **Ready when you see:** the frontend at <http://localhost:10599> loads and the block height
 top-right is incrementing. Confirm the API too: <http://localhost:9999/api/erc721> (returns `[]`
-until you mint — that's expected). Boot to "frontend up" took a few minutes on this machine; the
-Midnight step pauses on "Waiting to receive tokens… / Wallet sync progress" while the local devnet
-funds the deploy wallet — that's normal, not a hang.
+until you mint — that's expected). The Midnight step pauses on "Waiting to receive tokens… /
+Wallet sync progress" while the local devnet funds the deploy wallet — that's normal, not a hang.
 
-**Free the ports first if a previous run is still around:**
+**Prereqs:** `bun`, plus the `compact` (Midnight) and `forge` (EVM) compilers on PATH, and Docker
+running. **Free the ports** first if a previous run is still around:
 ```sh
 NODE_ENV=development bunx orchestrator stop   # clean shutdown
 # nuclear option if something is stuck:
 lsof -ti tcp:10599,9999,3334,8545,9944,8088,6300 | xargs kill -9 2>/dev/null
 ```
-
-Toolchain prereqs (verified present on this machine): `bun`, `forge`, `compact`, `docker`.
 
 ---
 
@@ -60,7 +51,7 @@ Toolchain prereqs (verified present on this machine): `bun`, `forge`, `compact`,
 You don't need to *run* the commands live (the stack is already warm). Walk the slide, then drive
 the already-running app:
 
-1. **Show the slide** with the 3 commands — "this is the entire setup: clone, install, `bun run dev`."
+1. **Show the slide** with the commands — "this is the entire setup: clone, `bun i`, `bun run dev`."
 2. **Switch to terminal** — point at the orchestrator output: "one command brought up six services —
    database, a local EVM chain, the full Midnight stack, our sync node, the batcher, and the frontend."
 3. **Open <http://localhost:10599>** — "both chains' block heights are ticking live."
@@ -88,31 +79,12 @@ the already-running app:
 move on. The screenshots were captured from a real local boot, so the story is identical.
 
 Common gotchas:
-- **`Cannot find module '@evm-midnight/...'`** → you ran `bun install` in the monorepo. Use `./link.sh`.
 - **Frontend blank page** → Bun `ws` issue; `.env.dev` already sets `VITE_IS_BUN=true` (HTTP polling). Reload.
 - **Port already in use** → run the `orchestrator stop` / `lsof … kill` block above, then `bun run dev`.
 - **Sync stuck at block 0** → Hardhat isn't mining; restart just that process:
   `NODE_ENV=development bunx orchestrator restart <name>` (names via `orchestrator status`).
 - **Midnight contract failed to deploy** → check `MIDNIGHT_STORAGE_PASSWORD` complexity in `start.dev.ts`.
-
-## 🧩 Monorepo setup gotchas (hit & solved during prep)
-If you boot from inside the monorepo, these two bite in order:
-
-1. **`Cannot find module '@effectstream/utils/runtime'`** during `midnight-contract` deploy
-   → the monorepo root has no `node_modules`. Run **`bun install` at the repo root** once.
-2. **`Deployment failed: expected instance of ContractMaintenanceAuthority`**
-   → the root `bun install` reset `packages/chains/midnight-contracts/node_modules/@midnight-ntwrk/*`
-   to the root's WASM copies, so two WASM instances are loaded and `instanceof` fails. Fix: **re-run
-   `./link.sh`** in the template (it re-points those symlinks to the template's copies). So the rule
-   is **root `bun install` first, then `link.sh`** — never the other way around.
-
-A clean reproduction from scratch:
-```sh
-cd /path/to/effectstream && bun install            # root deps
-cd templates/evm-midnight-v2 && ./link.sh          # AFTER root install
-bun run build:midnight && bun run build:evm && bun run build:pgtypes
-bun run dev
-```
+- **Contract compile error on first `bun run dev`** → make sure the `compact` and `forge` compilers are on PATH.
 
 ## 🧹 After the session
 ```sh
