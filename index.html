@@ -497,14 +497,15 @@ bun run dev    # 🚀 compiles contracts AND boots the entire local stack</code>
               </div>
               <div class="card">
                 <h3>Batcher</h3>
-                <p>Users sign inputs → bundled into <strong>one on-chain tx</strong>. Storage-first, so it's crash-safe.</p>
+                <p>Users sign inputs → bundled into <strong>one on-chain tx</strong>. Storage-first &amp; crash-safe — and it can <strong>pay gas for your users</strong> (next slide).</p>
               </div>
             </div>
             <aside class="notes">
               First half of the toolbox — getting data in and out of chains. You pick which chains by declaring them
               in config. Primitives are the typed watchers that say "tell me about ERC-721 transfers" or "watch this
               Midnight contract." And the batcher is how user inputs go back on-chain efficiently: sign, bundle into
-              one transaction, crash-safe because it persists first.
+              one transaction, crash-safe because it persists first — and crucially it submits on the user's behalf,
+              which is what lets you sponsor their gas. More on that next.
             </aside>
           </section>
 
@@ -543,6 +544,36 @@ bun run dev    # 🚀 compiles contracts AND boots the entire local stack</code>
               orchestrator runs the whole local stack from one command — and you control which processes run via config,
               so you only spin up the chains your app uses. And the wallets package gives you one login call across every
               ecosystem. It's all TypeScript, no build step in dev.
+            </aside>
+          </section>
+
+          <section>
+            <span class="tag">Batcher · gasless UX</span>
+            <h2>Sponsor your users' transactions</h2>
+            <p class="small muted" style="margin-bottom:0.5em;">The batcher submits inputs <em>on the user's behalf</em> — your app holds the key and pays the gas. So you can offer Web2-style, gas-free UX:</p>
+            <div class="grid3 small">
+              <div class="card">
+                <h3>Gasless onboarding</h3>
+                <p>Users sign, you pay — <strong>no gas, no faucet, no bridge</strong> to get started.</p>
+              </div>
+              <div class="card">
+                <h3>Metered &amp; tiered</h3>
+                <p>Add a <strong>policy</strong>: subscription → <strong>5 free tx/day</strong>, rate-limits, allowlists — enforced before submit.</p>
+              </div>
+              <div class="card" style="background:rgba(6,214,160,0.06); border-color:rgba(6,214,160,0.25);">
+                <h3 style="color:var(--cyan)">Proven</h3>
+                <p>Tarochi subsidized <strong>1M+ tx</strong> this way — users never touched gas.</p>
+              </div>
+            </div>
+            <p class="small muted" style="margin-top:0.5em;">It's just custom batcher validation — see the <code>batcher-validations</code> template.</p>
+            <aside class="notes">
+              This is a big UX/business unlock, so call it out. Because the batcher submits the on-chain transaction on
+              the user's behalf — holding the app's key and paying the gas — you can give users a completely gas-free
+              experience: they sign, you sponsor. No faucet, no bridge, no "go buy ETH first." And it's easy to meter:
+              you add a validation policy on the batcher — e.g. a subscriber gets 5 free transactions a day, free users
+              get rate-limited, certain addresses get allowlisted — enforced before anything is submitted. That's just
+              custom batcher validation; there's a batcher-validations template for it. Tarochi did exactly this to
+              subsidize over a million transactions so players never thought about gas.
             </aside>
           </section>
 
