@@ -305,8 +305,8 @@
           <section data-background-color="#13131a">
             <span class="tag">Part 3</span>
             <h2>Demos in the wild</h2>
-            <p class="muted">Real apps, live today</p>
-            <aside class="notes">Three minutes — three things that are actually deployed, so this isn't just theory.</aside>
+            <p class="muted">Real apps &amp; templates, working today</p>
+            <aside class="notes">Three minutes — three things that actually exist and run, so this isn't just theory.</aside>
           </section>
 
           <section>
@@ -345,24 +345,21 @@
           </section>
 
           <section>
-            <span class="tag">DeFi · Midnight + Celestia</span>
-            <h2 style="margin-bottom:0.25em;">ZSwap-DA</h2>
-            <iframe src="https://drive.google.com/file/d/1vqybh83YG5hR7eeDNlQVNpxSWQrWXqtG/preview"
+            <span class="tag">Dev environment · EVM + Cardano</span>
+            <h2 style="margin-bottom:0.25em;">EVM-Cardano Explorer</h2>
+            <iframe src="https://drive.google.com/file/d/1dmXshwpqeXi9sez5ekfqfrlXBdjVVABW/preview"
                     style="width:64%; height:380px; border:0; border-radius:14px; box-shadow:0 8px 40px rgba(0,0,0,0.5);"
                     allow="autoplay" allowfullscreen></iframe>
             <p class="small" style="margin-top:0.5em;">
-              <strong>Atomic token swaps</strong> — offers published to <strong>Celestia</strong> (cheap DA),
-              indexed by sync, settled privately on <strong>Midnight</strong> (ZK). An open-source template.
+              A full local <strong>EVM + Cardano</strong> dev env from one command — Hardhat + <strong>YACI DevKit</strong> + <strong>Dolos</strong>.
+              Mint NFTs, send ADA, one unified feed — <em>minutes, not the days</em> a Cardano indexer sync usually takes.
             </p>
             <aside class="notes">
-              The DeFi example. ZSwap is a decentralized swap platform that uses two chains for what each is good at:
-              Celestia as a cheap data-availability layer to publish the swap offers, and Midnight for private,
-              ZK-verified settlement. Offer goes to Celestia, our sync node indexes it, the swap completes on Midnight.
-
-              ⚠️ HOLD: do NOT claim this "processing transactions without contracts on Celestia" works on MAINNET yet —
-              we're holding that messaging for a few weeks. Frame Celestia processing as a local/dev capability for now.
-              (Also: this whole ZSwap example may be cut — pending confirmation. If cut, the demo section is just
-              Safe Solver + Tarochi.)
+              The developer-experience demo. Standing up a local Cardano dev environment historically meant syncing an
+              indexer like Carp for days — which kills iteration. This template replaces that with an instant localhost
+              stack: EVM (Hardhat) + Cardano (YACI DevKit, indexed by Dolos over UTxORPC), all from one `bun run dev`.
+              The clip shows the orchestrator booting the whole thing; the Explorer UI mints NFTs, sends ADA, and shows
+              a unified cross-chain event feed. The hook: multi-chain dev in minutes, not days.
             </aside>
           </section>
         </section>
@@ -564,11 +561,11 @@ bun i && bun run dev</code></pre>
                 <li><strong>Play</strong> — safesolver.midnight.fun</li>
               </ul>
             </div>
-            <p class="small muted" style="margin-top:0.6em;">Templates to start from: <code>minimal</code> · <code>evm-midnight-v2</code> · <code>zswap-da</code> · <code>chess-v2</code> · <code>preorder</code></p>
+            <p class="small muted" style="margin-top:0.6em;">Templates to start from: <code>minimal</code> · <code>evm-midnight-v2</code> · <code>evm-cardano</code> · <code>chess-v2</code> · <code>preorder</code></p>
             <aside class="notes">
               If you want to play with it after this: three commands and you have what I just demoed running locally.
               Repo, docs, blog, and the live games are all linked. Pick a template close to what you want — minimal to
-              learn, evm-midnight for cross-chain + privacy, zswap for DeFi, chess for a full game.
+              learn, evm-midnight for cross-chain + privacy, evm-cardano for an instant multi-chain dev env, chess for a full game.
             </aside>
           </section>
 

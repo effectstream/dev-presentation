@@ -32,7 +32,7 @@ bunx serve presentation               # then visit the printed URL
 ## Structure (~25 min)
 1. **Why multi-chain dApps** — context & the problem (3 min)
 2. **How EffectStream works** — sync → state machine → indexed state; batcher; non-custodial (4 min)
-3. **Demos in the wild** — Safe Solver, Tarochi, ZSwap-DA (3 min)
+3. **Demos in the wild** — Safe Solver, Tarochi, EVM-Cardano Explorer (3 min)
 4. **Live: launch the EVM + Midnight template** (10 min) — see `RUNBOOK.md`
 5. **Tools, links, try it** (3 min)
 
