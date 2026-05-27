@@ -617,15 +617,14 @@ bun i && bun run dev</code></pre>
             <span class="tag">How it works</span>
             <h3>Do recent indexer issues affect our indexer?</h3>
             <ul class="small">
-              <li>EffectStream's <strong>sync</strong> reads from a chain's indexer/RPC — it's <strong>decoupled</strong> from it.</li>
-              <li>If an upstream indexer (e.g. Midnight's) is degraded, sync <strong>slows or pauses, then resumes</strong> from the last confirmed point — state stays deterministic, nothing corrupts.</li>
-              <li class="muted">Live status of any current indexer issue → confirm with the team (ops question, not architectural).</li>
+              <li>The chain <strong>only moves forward when it can confirm blocks closed at or before the target time</strong> — otherwise it <strong>waits</strong>.</li>
+              <li>So a degraded upstream indexer makes sync <strong>pause and resume</strong>, never advance on bad data — state stays deterministic, nothing corrupts.</li>
+              <li class="muted">Sync reads from the chain's indexer/RPC and is decoupled from it; it catches up when the source recovers.</li>
             </ul>
             <aside class="notes">
-              Honest framing: this is partly an ops question I can't answer from the code. Architecturally, our sync
-              service is a consumer of the chain's indexer/RPC; it tracks its own cursor and is deterministic, so an
-              upstream hiccup delays ingestion but doesn't corrupt state — it catches up when the source recovers.
-              For the specifics of the "recent issues," defer to the team's current status.
+              Key point: EffectStream only advances when it can confirm blocks are closed at/before the target time —
+              if it can't, it waits rather than moving on. So an upstream indexer hiccup delays ingestion but never
+              corrupts state; it resumes from the last confirmed point when the source recovers.
             </aside>
           </section>
 
@@ -678,12 +677,14 @@ bun i && bun run dev</code></pre>
             <span class="tag">The template</span>
             <h3>Ready for people to clone the Midnight-EVM work now?</h3>
             <ul class="small">
-              <li>The template <strong>runs locally today</strong> (<code>bun i &amp;&amp; bun run dev</code>); docs are labeled <strong>V2 preview</strong>.</li>
-              <li class="muted">Green-light for broad public cloning → confirm with the team (org decision, not technical).</li>
+              <li><strong>Yes</strong> — early release but <strong>stable</strong>: only fixes are being applied, <strong>no API or structural changes</strong>.</li>
+              <li>You only need to <strong>clone if you want to add infra</strong> — otherwise just pull the <strong><code>@effectstream/*</code> npm packages</strong>.</li>
+              <li class="muted">Docs: <a href="https://effectstream.github.io/docs/" target="_blank" rel="noopener">effectstream.github.io/docs</a></li>
             </ul>
             <aside class="notes">
-              I can't make the go/no-go call from the repo. Technically it works end-to-end locally; the docs carry a
-              "V2 preview, feedback welcome" banner. Defer the "are we ready to point people at it" decision to the team.
+              Yes — we're in early release but stable. We're only applying fixes, no API or structural changes, so it's
+              safe to build on. You don't have to clone the repo unless you want to add your own infrastructure — for
+              most apps you just install the @effectstream/* packages from npm. Docs live at effectstream.github.io/docs.
             </aside>
           </section>
 
@@ -693,12 +694,14 @@ bun i && bun run dev</code></pre>
             <ul class="small">
               <li><strong>Finality differences &amp; reorgs</strong> — handled by per-chain <code>confirmationDepth</code>.</li>
               <li><strong>Different block times / ordering</strong> — handled by the NTP "Main" clock.</li>
-              <li><strong>RPC reliability &amp; rate limits</strong>; per-ecosystem <strong>wallet &amp; address formats</strong> — abstracted by typed primitives + the wallets package.</li>
+              <li><strong>RPC reliability &amp; rate limits</strong> — you still need an RPC, but you can <strong>slow query frequency to match your RPC's limits</strong> (per chain).</li>
+              <li>Per-ecosystem <strong>wallet &amp; address formats</strong> — abstracted by typed primitives + the wallets package.</li>
             </ul>
             <aside class="notes">
               The framework absorbs most of the classic cross-chain pain: reorg/finality via confirmationDepth,
               ordering via the deterministic clock, and wallet/format heterogeneity via @effectstream/wallets and typed
-              primitives. RPC reliability/rate-limits are still an operational concern devs should plan for.
+              primitives. On RPCs: you still need one, but query frequency is tunable per chain, so you can dial it down
+              to stay under your provider's rate limits.
             </aside>
           </section>
 
@@ -706,14 +709,16 @@ bun i && bun run dev</code></pre>
             <span class="tag">The template</span>
             <h3>How is the private data tied to the metadata on Ethereum?</h3>
             <ul class="small">
-              <li>Linked by a <strong>composite key: <code>(contract_address, token_id)</code></strong>.</li>
-              <li>EVM <code>Transfer</code> event → row in <code>evm_midnight</code> (ownership).</li>
-              <li>Midnight ledger update → property on the <strong>same token_id</strong>; a SQL join yields <strong>one record = public token + private property</strong>.</li>
+              <li>Tied together <strong>in the L2 layer</strong> — a deterministic Postgres DB. Each EffectStream is a node; <strong>every node has the same deterministic database</strong>. No bridge.</li>
+              <li>You can <strong>mix &amp; match any chain feature</strong>. Here we read the <strong>Midnight Ledger as if it were events</strong> — so you inherit Midnight's security.</li>
+              <li><strong>Selective disclosure:</strong> we reveal only "Token XXX ↔ YYY on Midnight" — you could keep that secret instead.</li>
             </ul>
             <aside class="notes">
-              From templates/evm-midnight-v2 state-machine.ts + migrations: the transfer-assets STF writes ownership
-              keyed by (contract_address, token_id); the midnightContractState STF writes properties keyed by the same
-              pair. They're never bridged — the state machine just joins two chains' events on the token id.
+              The link isn't a bridge — it's the L2. Each EffectStream node runs a deterministic Postgres database, and
+              every node computes the same DB from the same chain events, so the association is consistent everywhere.
+              You can use any feature the underlying chains expose and mix them: in this example we read Midnight's
+              public ledger as if it emitted events, which means you lean on Midnight's security and choose what to
+              disclose — here, just that token XXX is associated with YYY; you could equally keep that private.
             </aside>
           </section>
 
@@ -722,13 +727,14 @@ bun i && bun run dev</code></pre>
             <span class="tag">Capabilities</span>
             <h3>Swaps across &gt;2 chains at once (BTC ↔ ETH ↔ NIGHT)?</h3>
             <ul class="small">
-              <li><strong>Coordination yes; true 3-way atomic, no.</strong></li>
-              <li>EffectStream <strong>sequences the legs</strong>: detect on chain A → act on B → act on C. Each leg is atomic in the state machine; the overall flow is sequential — <strong>no bridge</strong>.</li>
+              <li><strong>Yes.</strong> An action on A can trigger actions on <strong>both B and C</strong> — <strong>optimistically</strong> (parallel) or <strong>sequentially</strong>.</li>
+              <li><strong>You decide the sequence.</strong> It's <strong>not a bridge by nature</strong> — but you can build one on top.</li>
             </ul>
             <aside class="notes">
-              Honest answer. It's a multichain co-processor: it reads many chains and coordinates settlement, but it
-              doesn't impose protocol-level atomicity across 3+ chains (that's bounded by the underlying chains' finality).
-              The multi-chain-token-transfer template shows the sequential pattern.
+              More capable than people expect. EffectStream is a multichain co-processor: an event on chain A can fan
+              out to actions on B and C — you can be optimistic and fire them in parallel, or make it strictly
+              sequential; you design the sequence. It isn't a bridge by default, but a bridge is one of the things you
+              can build with this. The legs still settle on the underlying chains, subject to their finality.
             </aside>
           </section>
 
@@ -736,13 +742,14 @@ bun i && bun run dev</code></pre>
             <span class="tag">Capabilities</span>
             <h3>What determines transaction order? How is time managed across networks?</h3>
             <ul class="small">
-              <li>A deterministic <strong>"Main" protocol = an NTP clock</strong> ticking at a fixed interval (e.g. 1000ms) — not a blockchain.</li>
-              <li>Every chain's events are mapped onto that timeline by <strong>source block height + timestamp</strong> → every node reconstructs the <strong>same order</strong>.</li>
-              <li>This decouples the app's tick-rate from each chain's variable block time.</li>
+              <li><strong>Reads are ordered &amp; deterministic</strong> — events map onto a deterministic <strong>"Main" NTP clock</strong> by source block height + time, so every node reconstructs the same order.</li>
+              <li><strong>Writes are best-effort</strong> — they happen whenever they're accepted; batchers <strong>retry</strong>, but still depend on external factors (gas prices, asset no longer available, bad tx).</li>
             </ul>
             <aside class="notes">
-              The Main/NTP protocol (sync-service docs + sync/src/sync-protocols/ntp/fetcher.ts) is the official timeline.
-              Determinism = same inputs + same code → same state on every node, because the ordering rule is fixed.
+              The clean split to give: reads vs writes. Reads/ingestion are deterministic — the Main/NTP protocol is the
+              official timeline, so same inputs + same code → same state on every node. Writes (posting back to chains
+              via the batcher) are best-effort: they land when accepted, the batcher retries, but they're still subject
+              to real-world factors like gas, an asset being gone, or a rejected tx. Deterministic in, best-effort out.
             </aside>
           </section>
 
@@ -750,14 +757,15 @@ bun i && bun run dev</code></pre>
             <span class="tag">Capabilities</span>
             <h3>What do the wallets mean for partners?</h3>
             <ul class="small">
-              <li>One <strong><code>walletLogin()</code></strong> across MetaMask/EVM, Cardano CIP-30, Midnight (Lace), Mina, Polkadot, Algorand, Avail.</li>
+              <li>One <strong><code>walletLogin()</code></strong> across MetaMask/EVM, Cardano CIP-30, Midnight (Lace), Mina, Polkadot, Algorand, Avail. Users keep <strong>L1 custody</strong> — partners never hold funds.</li>
               <li>Full sync + batcher + wallet on <strong>EVM, Midnight, Cardano, Avail, Bitcoin</strong>; others are wallet-connect / sign-only today.</li>
-              <li>Users keep <strong>L1 custody</strong> throughout — partners integrate without holding funds.</li>
+              <li>Plus <strong>JS testing wallets</strong> (Midnight · EVM · Cardano) to drive features <strong>end-to-end</strong> — great for automated &amp; <strong>AI-assisted</strong> build/test.</li>
             </ul>
             <aside class="notes">
-              @effectstream/wallets WalletMode covers 8+ wallet families. Partners get one login + sendTransaction
-              abstraction across ecosystems; the non-custodial model means they never take custody. Full-sync vs
-              sign-only differs by chain (see the chains support matrix) — worth setting expectations per partner.
+              @effectstream/wallets covers 8+ wallet families with one login + sendTransaction abstraction; non-custodial,
+              so partners never take custody. Full-sync vs sign-only differs by chain. And we ship JS testing wallets for
+              Midnight, EVM, and Cardano — so you can exercise the whole flow end-to-end in code, which makes automated
+              testing (and using AI to build and test) much easier. Full-sync vs sign-only differs by chain per the matrix.
             </aside>
           </section>
         </section>
