@@ -352,13 +352,17 @@
                     allow="autoplay" allowfullscreen></iframe>
             <p class="small" style="margin-top:0.5em;">
               <strong>Atomic token swaps</strong> — offers published to <strong>Celestia</strong> (cheap DA),
-              indexed by sync, settled privately on <strong>Midnight</strong> (ZK). A template you can run today.
+              indexed by sync, settled privately on <strong>Midnight</strong> (ZK). An open-source template.
             </p>
             <aside class="notes">
               The DeFi example. ZSwap is a decentralized swap platform that uses two chains for what each is good at:
               Celestia as a cheap data-availability layer to publish the swap offers, and Midnight for private,
               ZK-verified settlement. Offer goes to Celestia, our sync node indexes it, the swap completes on Midnight.
-              And it's a template in the repo — you can boot it the same way I boot the next one.
+
+              ⚠️ HOLD: do NOT claim this "processing transactions without contracts on Celestia" works on MAINNET yet —
+              we're holding that messaging for a few weeks. Frame Celestia processing as a local/dev capability for now.
+              (Also: this whole ZSwap example may be cut — pending confirmation. If cut, the demo section is just
+              Safe Solver + Tarochi.)
             </aside>
           </section>
         </section>
