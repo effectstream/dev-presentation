@@ -589,6 +589,182 @@ bun i && bun run dev</code></pre>
           </section>
         </section>
 
+        <!-- ===================== APPENDIX: Q&A BACKUP ===================== -->
+        <section>
+          <section data-background-color="#13131a">
+            <span class="tag">Appendix</span>
+            <h2>Q&amp;A — backup</h2>
+            <div class="grid3 small" style="margin-top:0.4em; text-align:left;">
+              <div class="card">
+                <h3 style="font-size:0.85em;">How it works</h3>
+                <p style="font-size:0.8em;">Indexer impact · finality &amp; slow settlement · batcher mechanics · "just a metadata standard?"</p>
+              </div>
+              <div class="card">
+                <h3 style="font-size:0.85em;">The template</h3>
+                <p style="font-size:0.8em;">Ready to clone? · common cross-chain pitfalls · private data ↔ EVM linkage</p>
+              </div>
+              <div class="card">
+                <h3 style="font-size:0.85em;">Capabilities</h3>
+                <p style="font-size:0.8em;">&gt;2-chain swaps · how ordering / time works · wallets for partners</p>
+              </div>
+            </div>
+            <p class="small muted" style="margin-top:0.6em;">Jump here (Esc → click) to answer live. Headline on the slide, detail in notes.</p>
+            <aside class="notes">
+              These are improvisation backups — not part of the main flow. Use the overview (Esc / O) to jump to the
+              right one. Each slide has the short answer up top and the grounded detail down here in notes.
+            </aside>
+          </section>
+
+          <!-- ===== A. How it works ===== -->
+          <section>
+            <span class="tag">How it works</span>
+            <h3>Do recent indexer issues affect our indexer?</h3>
+            <ul class="small">
+              <li>EffectStream's <strong>sync</strong> reads from a chain's indexer/RPC — it's <strong>decoupled</strong> from it.</li>
+              <li>If an upstream indexer (e.g. Midnight's) is degraded, sync <strong>slows or pauses, then resumes</strong> from the last confirmed point — state stays deterministic, nothing corrupts.</li>
+              <li class="muted">Live status of any current indexer issue → confirm with the team (ops question, not architectural).</li>
+            </ul>
+            <aside class="notes">
+              Honest framing: this is partly an ops question I can't answer from the code. Architecturally, our sync
+              service is a consumer of the chain's indexer/RPC; it tracks its own cursor and is deterministic, so an
+              upstream hiccup delays ingestion but doesn't corrupt state — it catches up when the source recovers.
+              For the specifics of the "recent issues," defer to the team's current status.
+            </aside>
+          </section>
+
+          <section>
+            <span class="tag">How it works</span>
+            <h3>Sync times &amp; slow finality (rollups settling for days)?</h3>
+            <ul class="small">
+              <li>Each chain has a <strong><code>confirmationDepth</code></strong> — sync waits N blocks before treating a block as final (EVM ~12, BTC ~6, instant-finality 0).</li>
+              <li>A per-chain <strong>delay</strong> ≈ <code>depth × blockTime + buffer</code> absorbs latency &amp; reorg risk; slow/deep-settlement chains get a higher value.</li>
+              <li>The deterministic <strong>NTP "Main" clock</strong> ticks independently, so the app keeps a steady tick-rate regardless of any one chain's settlement speed.</li>
+            </ul>
+            <aside class="notes">
+              confirmationDepth (config/src/schema/sync-protocols/common.ts) sets reorg safety per chain; ordering is
+              provisional as blocks arrive and finalized at depth. As a based rollup, EffectStream inherits its DA
+              layer's finality. The NTP main protocol decouples app tick-rate from variable chain block/finality times.
+            </aside>
+          </section>
+
+          <section>
+            <span class="tag">How it works</span>
+            <h3>Batcher — per chain, then sync? Not cross-network at once?</h3>
+            <ul class="small">
+              <li><strong>Correct.</strong> The batcher batches <strong>per chain / per adapter</strong> — independent queues, one bundled tx per chain — and the sync layer picks each up.</li>
+              <li>It is <strong>not</strong> doing a single atomic operation across multiple networks simultaneously.</li>
+              <li>Batch triggers: time / size / value / hybrid / custom. Confirmation: <code>no-wait</code> · <code>wait-receipt</code> · <code>wait-effectstream-processed</code>.</li>
+            </ul>
+            <aside class="notes">
+              Per packages/batcher/README: each adapter target (e.g. "ethereum", "midnight") has its own queue and
+              polling loop, so a slow chain doesn't block others — but they're independent per-chain submissions, not
+              one cross-network atomic batch. Storage is the source of truth, so it survives restarts.
+            </aside>
+          </section>
+
+          <section>
+            <span class="tag">How it works</span>
+            <h3>Is this mostly a metadata standard for publishing across networks?</h3>
+            <ul class="small">
+              <li><strong>No</strong> — it's a full <strong>execution + state model</strong>: read many chains → deterministic state machine → queryable state.</li>
+              <li>The metadata/NFT-projection <strong>standards (PRCs) are an optional feature</strong>, not the core.</li>
+            </ul>
+            <aside class="notes">
+              Common misconception that conflates EffectStream with the PRC standards it publishes. Core = data
+              projections + deterministic computation + optional settlement/batching. PRC-3/5 (inverse projections,
+              serving live metadata to L1 marketplaces) are an optional layer on top, not the foundation.
+            </aside>
+          </section>
+
+          <!-- ===== B. The template ===== -->
+          <section>
+            <span class="tag">The template</span>
+            <h3>Ready for people to clone the Midnight-EVM work now?</h3>
+            <ul class="small">
+              <li>The template <strong>runs locally today</strong> (<code>bun i &amp;&amp; bun run dev</code>); docs are labeled <strong>V2 preview</strong>.</li>
+              <li class="muted">Green-light for broad public cloning → confirm with the team (org decision, not technical).</li>
+            </ul>
+            <aside class="notes">
+              I can't make the go/no-go call from the repo. Technically it works end-to-end locally; the docs carry a
+              "V2 preview, feedback welcome" banner. Defer the "are we ready to point people at it" decision to the team.
+            </aside>
+          </section>
+
+          <section>
+            <span class="tag">The template</span>
+            <h3>Common issues devs hit with cross-chain apps?</h3>
+            <ul class="small">
+              <li><strong>Finality differences &amp; reorgs</strong> — handled by per-chain <code>confirmationDepth</code>.</li>
+              <li><strong>Different block times / ordering</strong> — handled by the NTP "Main" clock.</li>
+              <li><strong>RPC reliability &amp; rate limits</strong>; per-ecosystem <strong>wallet &amp; address formats</strong> — abstracted by typed primitives + the wallets package.</li>
+            </ul>
+            <aside class="notes">
+              The framework absorbs most of the classic cross-chain pain: reorg/finality via confirmationDepth,
+              ordering via the deterministic clock, and wallet/format heterogeneity via @effectstream/wallets and typed
+              primitives. RPC reliability/rate-limits are still an operational concern devs should plan for.
+            </aside>
+          </section>
+
+          <section>
+            <span class="tag">The template</span>
+            <h3>How is the private data tied to the metadata on Ethereum?</h3>
+            <ul class="small">
+              <li>Linked by a <strong>composite key: <code>(contract_address, token_id)</code></strong>.</li>
+              <li>EVM <code>Transfer</code> event → row in <code>evm_midnight</code> (ownership).</li>
+              <li>Midnight ledger update → property on the <strong>same token_id</strong>; a SQL join yields <strong>one record = public token + private property</strong>.</li>
+            </ul>
+            <aside class="notes">
+              From templates/evm-midnight-v2 state-machine.ts + migrations: the transfer-assets STF writes ownership
+              keyed by (contract_address, token_id); the midnightContractState STF writes properties keyed by the same
+              pair. They're never bridged — the state machine just joins two chains' events on the token id.
+            </aside>
+          </section>
+
+          <!-- ===== C. Capabilities ===== -->
+          <section>
+            <span class="tag">Capabilities</span>
+            <h3>Swaps across &gt;2 chains at once (BTC ↔ ETH ↔ NIGHT)?</h3>
+            <ul class="small">
+              <li><strong>Coordination yes; true 3-way atomic, no.</strong></li>
+              <li>EffectStream <strong>sequences the legs</strong>: detect on chain A → act on B → act on C. Each leg is atomic in the state machine; the overall flow is sequential — <strong>no bridge</strong>.</li>
+            </ul>
+            <aside class="notes">
+              Honest answer. It's a multichain co-processor: it reads many chains and coordinates settlement, but it
+              doesn't impose protocol-level atomicity across 3+ chains (that's bounded by the underlying chains' finality).
+              The multi-chain-token-transfer template shows the sequential pattern.
+            </aside>
+          </section>
+
+          <section>
+            <span class="tag">Capabilities</span>
+            <h3>What determines transaction order? How is time managed across networks?</h3>
+            <ul class="small">
+              <li>A deterministic <strong>"Main" protocol = an NTP clock</strong> ticking at a fixed interval (e.g. 1000ms) — not a blockchain.</li>
+              <li>Every chain's events are mapped onto that timeline by <strong>source block height + timestamp</strong> → every node reconstructs the <strong>same order</strong>.</li>
+              <li>This decouples the app's tick-rate from each chain's variable block time.</li>
+            </ul>
+            <aside class="notes">
+              The Main/NTP protocol (sync-service docs + sync/src/sync-protocols/ntp/fetcher.ts) is the official timeline.
+              Determinism = same inputs + same code → same state on every node, because the ordering rule is fixed.
+            </aside>
+          </section>
+
+          <section>
+            <span class="tag">Capabilities</span>
+            <h3>What do the wallets mean for partners?</h3>
+            <ul class="small">
+              <li>One <strong><code>walletLogin()</code></strong> across MetaMask/EVM, Cardano CIP-30, Midnight (Lace), Mina, Polkadot, Algorand, Avail.</li>
+              <li>Full sync + batcher + wallet on <strong>EVM, Midnight, Cardano, Avail, Bitcoin</strong>; others are wallet-connect / sign-only today.</li>
+              <li>Users keep <strong>L1 custody</strong> throughout — partners integrate without holding funds.</li>
+            </ul>
+            <aside class="notes">
+              @effectstream/wallets WalletMode covers 8+ wallet families. Partners get one login + sendTransaction
+              abstraction across ecosystems; the non-custodial model means they never take custody. Full-sync vs
+              sign-only differs by chain (see the chains support matrix) — worth setting expectations per partner.
+            </aside>
+          </section>
+        </section>
+
       </div>
     </div>
 
