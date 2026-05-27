@@ -136,7 +136,7 @@
               <li><strong>3.</strong> Demos in the wild</li>
             </ul>
             <ul>
-              <li><strong>4.</strong> <span class="play">Live:</span> launch an EVM + Cardano template</li>
+              <li><strong>4.</strong> <span class="play">Live:</span> launch an EVM + Midnight template</li>
               <li><strong>5.</strong> Tools, links, try it yourself</li>
             </ul>
           </div>
@@ -370,13 +370,13 @@
         <!-- ===================== SEGMENT 4: LIVE LAUNCH ===================== -->
         <section>
           <section data-background-gradient="linear-gradient(135deg, #160f24 0%, #0d0d12 60%, #0b1f1a 100%)">
-            <span class="tag" style="color:var(--cyan);border-color:rgba(6,214,160,0.4);background:rgba(6,214,160,0.12)">Part 4 · Live</span>
-            <h2>Launch an EVM + Cardano app</h2>
-            <p class="muted">From <span class="kbd">git clone</span> to a full multi-chain dev environment</p>
+            <span class="tag" style="color:var(--es-ok);border-color:var(--es-ok);background:rgba(74,222,128,0.12)">Part 4 · Live</span>
+            <h2>Launch an EVM + Midnight app</h2>
+            <p class="muted">From <span class="kbd">git clone</span> to a running cross-chain dApp</p>
             <aside class="notes">
-              The main event. I'll launch the evm-cardano template — the "EVM-Cardano Explorer." Heads up to me:
-              pre-boot it ~5 min before going live so it's already synced (see RUNBOOK.md). If anything stalls, I drop
-              to the screenshot / recorded video on the next slides and narrate.
+              The main event. I'll launch the evm-midnight-v2 template. Heads up to me: I pre-booted this ~5 min
+              before going live so it's already synced — see RUNBOOK.md. If anything stalls, I drop to the screenshots
+              on the next slides and narrate.
             </aside>
           </section>
 
@@ -385,36 +385,34 @@
             <div class="grid2">
               <div class="card">
                 <h3>On EVM</h3>
-                <p class="small">Mint <strong>ERC-721 NFTs</strong> on a local Hardhat node.</p>
+                <p class="small">An <strong>ERC-721 NFT</strong>. Public ownership, standard <code>Transfer</code> events.</p>
               </div>
               <div class="card">
-                <h3>On Cardano</h3>
-                <p class="small">Send <strong>ADA</strong> on a local <strong>YACI DevKit</strong> devnet, indexed by <strong>Dolos</strong> (UTxORPC / gRPC).</p>
+                <h3>On Midnight</h3>
+                <p class="small">A <strong>private property</strong> added via a ZK circuit — only the owner can run it; the result is published for the app to read.</p>
               </div>
             </div>
-            <p style="margin-top:0.6em;">One <strong>unified cross-chain event feed</strong> — a full local EVM + Cardano dev env in <em>minutes, not the days</em> a Cardano indexer sync usually takes.</p>
+            <p style="margin-top:0.6em;">One database unifies both chains. <em>Public token + private metadata, no bridge.</em></p>
             <aside class="notes">
-              The pitch: the single biggest friction point for Cardano devs is the local dev environment — syncing an
-              indexer like Carp can take days on testnet, longer on mainnet, which kills iteration. This template
-              replaces that whole workflow with an instant localhost setup: Hardhat for EVM, YACI DevKit for a local
-              Cardano devnet, and Dolos with UTxORPC for indexing over gRPC. You mint NFTs on EVM, send ADA on Cardano,
-              and watch both in one unified event feed. Minutes, not days.
+              The app: an NFT lives on EVM where ownership is public. A private property — think a hidden stat,
+              a sealed bid, hidden inventory — is set on Midnight through a zero-knowledge circuit only the owner can run.
+              EffectStream watches both and stitches them into one queryable record. This is the "use each chain's
+              strength" idea made concrete.
             </aside>
           </section>
 
           <section>
             <h2>The whole launch</h2>
             <pre><code class="language-bash" data-trim data-line-numbers>git clone https://github.com/effectstream/effectstream.git
-cd effectstream/templates/evm-cardano
+cd effectstream/templates/evm-midnight-v2
 
 bun i          # install dependencies
 
 bun run dev    # 🚀 compiles contracts AND boots the entire local stack</code></pre>
             <p class="small muted">One command — <code>bun run dev</code> — compiles the contracts and orchestrates everything below.</p>
             <aside class="notes">
-              The entire thing — straight from the docs: clone, bun i, bun run dev. That last command compiles the
-              contracts and brings up the whole multi-chain stack. (Docker needs to be running for the Cardano side.)
-              Let me run it. (Switch to terminal.)
+              This is the entire thing — straight from the docs: clone, bun i, bun run dev. That last command
+              compiles the contracts and brings up the whole stack. Let me run it. (Switch to terminal.)
             </aside>
           </section>
 
@@ -424,13 +422,13 @@ bun run dev    # 🚀 compiles contracts AND boots the entire local stack</code>
             <div class="flow small">
               <span class="node">🗄️ Database</span>
               <span class="arrow">→</span>
-              <span class="node">⛓️ Chains<br/><span class="muted" style="font-size:0.8em">Hardhat · YACI DevKit + Dolos</span></span>
+              <span class="node">⛓️ Chains<br/><span class="muted" style="font-size:0.8em">Hardhat · Midnight node, indexer, proof server</span></span>
               <span class="arrow">→</span>
-              <span class="node">🔨 Compile<br/><span class="muted" style="font-size:0.8em">EVM contracts</span></span>
+              <span class="node">🔨 Compile<br/><span class="muted" style="font-size:0.8em">EVM + Compact</span></span>
               <span class="arrow">→</span>
               <span class="node">🚀 Deploy<br/><span class="muted" style="font-size:0.8em">contracts</span></span>
               <span class="arrow">→</span>
-              <span class="node">📜 Custom scripts<br/><span class="muted" style="font-size:0.8em">e.g. ADA top-up</span></span>
+              <span class="node">📜 Your custom scripts</span>
               <span class="arrow">→</span>
               <span class="node">🖥️ Dev tools + frontend</span>
             </div>
@@ -439,56 +437,44 @@ bun run dev    # 🚀 compiles contracts AND boots the entire local stack</code>
               <span class="lbl" style="font-size:0.5em; letter-spacing:0.08em; text-transform:uppercase; color:var(--text-tertiary); display:block;">then starts the EffectStream node</span>
               <strong>⚡ Sync service</strong> &nbsp;·&nbsp; State machine &nbsp;·&nbsp; API
             </div>
-            <p class="small muted" style="margin-top:0.5em;">You declare this graph once in config — no manual wiring, no days-long Cardano indexer sync.</p>
+            <p class="small muted" style="margin-top:0.5em;">You declare this graph once in config — no manual wiring, no "start these 8 terminals."</p>
             <aside class="notes">
-              The developer-experience payoff — say it out loud. Normally you'd hand-wire all this: start a database,
-              spin up the EVM node, stand up a Cardano devnet and its indexer (historically days of sync), compile and
-              deploy contracts, run seed/top-up scripts, launch dev tools and the frontend — and only THEN start your
-              indexer, in the right order. The orchestrator does the entire dependency graph for you from one command,
-              and once everything's ready it starts the EffectStream node — sync service, state machine, API. The same
-              `bun run dev` boots every template; they just declare a different process graph in config.
+              This is the developer-experience payoff — say it out loud. Normally you'd hand-wire all this: start a
+              database, spin up each chain's node and indexer, run the proof server, compile your contracts, deploy
+              them, run any seed/custom scripts, launch dev tools and the frontend — and only THEN start your indexer,
+              in the right order, each waiting on the last. The orchestrator does the entire dependency graph for you
+              from one command, and once everything's ready it starts the EffectStream node — the sync service that
+              reads the chains, the state machine, and the API. You declare the graph once in config; the engine runs it.
             </aside>
           </section>
 
           <section>
             <h2>The demo flow</h2>
             <ol class="small">
-              <li>Open <strong>localhost:10599</strong> → the Explorer dashboard, both chains' blocks ticking live.</li>
-              <li><strong>Mint</strong> an ERC-721 on the EVM side (one button, dev wallet — no extension).</li>
-              <li><strong>Send ADA</strong> on Cardano (use the in-app faucet for funds).</li>
-              <li>Watch both land in the <strong>unified event feed</strong> in ~a second.</li>
-              <li>Optional: hit <code>localhost:9999/api/events</code> → raw JSON.</li>
+              <li>Open <strong>localhost:10599</strong> → block heights from both chains ticking live.</li>
+              <li><strong>Mint</strong> an ERC-721 on the EVM side.</li>
+              <li>Watch the <strong>sync node index it</strong> in ~a second — it appears in the app.</li>
+              <li>Run the <strong>Midnight ZK circuit</strong> to attach a private property.</li>
+              <li>See the property show up — <strong>one record, two chains</strong>.</li>
+              <li>Optional: hit <code>localhost:9999/api/erc721</code> → raw JSON.</li>
             </ol>
             <aside class="notes">
-              The flow I'll click through: open the dashboard, show the EVM and Cardano blocks advancing. Mint an NFT
-              on EVM — it lands in the event feed. Send some ADA on Cardano — it lands too. One feed, two chains, all
-              indexed by the sync node. Then I'll hit the raw API so you see it's real indexed state, not UI mockery.
+              The flow I'll click through: open the app, show both chains' blocks advancing. Mint an NFT on EVM —
+              show it landing. Then add the private property via Midnight, watch the batcher submit it and the record
+              update. Finally I'll hit the raw API endpoint so you can see it's real indexed state, not UI mockery.
             </aside>
           </section>
 
-          <!-- Fallback: screenshot + recorded video -->
+          <!-- Screenshot fallback slides (filled after local boot) -->
           <section>
-            <span class="tag" style="color:var(--warn);border-color:var(--warn);background:rgba(245,158,11,0.12)">Fallback</span>
+            <span class="tag" style="color:var(--es-warn);border-color:var(--es-warn);background:rgba(251,191,36,0.12)">Fallback</span>
             <h2>The running app</h2>
-            <img src="assets/evm-cardano-explorer.png" alt="EVM-Cardano Explorer running locally" style="max-height:470px; border-radius:10px;" />
-            <p class="small muted">EVM-Cardano Explorer — live EVM + Cardano block heights, mint NFT / send ADA, one unified event feed.</p>
+            <img src="assets/demo-frontend.png" alt="EVM + Midnight dApp running locally" style="max-height:470px; border-radius:10px;" />
+            <p class="small muted">Live local boot — block height ticking, EVM ↔ Midnight wallet demo, one merged token view.</p>
             <aside class="notes">
-              The real app — note the live EVM and Cardano block heights and the unified event feed mixing NFT mints
-              and ADA transfers. If the live demo misbehaves, I narrate over this exactly as if it were live
-              (mint → feed → send ADA → feed), then move on. Never debug live for more than ~30 seconds.
-            </aside>
-          </section>
-
-          <section>
-            <span class="tag" style="color:var(--warn);border-color:var(--warn);background:rgba(245,158,11,0.12)">Fallback</span>
-            <h2 style="margin-bottom:0.25em;">…or the recorded launch</h2>
-            <iframe src="https://drive.google.com/file/d/1dmXshwpqeXi9sez5ekfqfrlXBdjVVABW/preview"
-                    style="width:64%; height:400px; border:0; border-radius:14px; box-shadow:0 8px 40px rgba(0,0,0,0.5);"
-                    allow="autoplay" allowfullscreen></iframe>
-            <p class="small muted" style="margin-top:0.5em;">The orchestrator booting the full EVM + Cardano stack with one command.</p>
-            <aside class="notes">
-              Hard backup: if the live boot is a no-go entirely, play this clip — the orchestrator bringing up the
-              whole EVM + Cardano environment from `bun run dev`. Then narrate the demo flow over the screenshot.
+              This is the real app from a local boot — note the live block height top-right. If the live demo
+              misbehaves live, I narrate over this exactly as if it were live (mint → index → add property),
+              then move on. Rule: never debug live for more than ~30 seconds. See RUNBOOK.md for the click-path.
             </aside>
           </section>
         </section>
@@ -566,7 +552,7 @@ bun run dev    # 🚀 compiles contracts AND boots the entire local stack</code>
           <section>
             <h2>Give it a try</h2>
             <pre><code class="language-bash" data-trim>git clone https://github.com/effectstream/effectstream.git
-cd effectstream/templates/evm-cardano
+cd effectstream/templates/evm-midnight-v2
 bun i && bun run dev</code></pre>
             <div class="grid2 small" style="margin-top:0.6em;">
               <ul>
@@ -578,11 +564,11 @@ bun i && bun run dev</code></pre>
                 <li><strong>Play</strong> — safesolver.midnight.fun</li>
               </ul>
             </div>
-            <p class="small muted" style="margin-top:0.6em;">Templates to start from: <code>minimal</code> · <code>evm-cardano</code> · <code>evm-midnight-v2</code> · <code>chess-v2</code> · <code>preorder</code></p>
+            <p class="small muted" style="margin-top:0.6em;">Templates to start from: <code>minimal</code> · <code>evm-midnight-v2</code> · <code>zswap-da</code> · <code>chess-v2</code> · <code>preorder</code></p>
             <aside class="notes">
               If you want to play with it after this: three commands and you have what I just demoed running locally.
               Repo, docs, blog, and the live games are all linked. Pick a template close to what you want — minimal to
-              learn, evm-cardano for an instant multi-chain dev env, evm-midnight for cross-chain + privacy, chess for a full game.
+              learn, evm-midnight for cross-chain + privacy, zswap for DeFi, chess for a full game.
             </aside>
           </section>
 

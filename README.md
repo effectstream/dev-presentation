@@ -1,6 +1,6 @@
 # EffectStream Intro Presentation
 
-A reusable ~25-minute talk (+ Q&A) introducing EffectStream and live-launching an EVM + Cardano template.
+A reusable ~25-minute talk (+ Q&A) introducing EffectStream and live-launching an EVM + Midnight template.
 
 **▶ Live deck: https://effectstream.github.io/dev-presentation/**
 
@@ -33,7 +33,7 @@ bunx serve presentation               # then visit the printed URL
 1. **Why multi-chain dApps** — context & the problem (3 min)
 2. **How EffectStream works** — sync → state machine → indexed state; batcher; non-custodial (4 min)
 3. **Demos in the wild** — Safe Solver, Tarochi, ZSwap-DA (3 min)
-4. **Live: launch the EVM + Cardano template** (10 min) — see `RUNBOOK.md`
+4. **Live: launch the EVM + Midnight template** (10 min) — see `RUNBOOK.md`
 5. **Tools, links, try it** (3 min)
 
 Speaker notes for every slide are embedded in `index.html` — press `S`.
