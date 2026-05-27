@@ -413,26 +413,34 @@ bun run dev    # 🚀 compiles contracts AND boots the entire local stack</code>
           </section>
 
           <section>
-            <h2><code>bun run dev</code> brings up</h2>
-            <div class="grid2 small">
-              <ul>
-                <li><strong>PGLite</strong> — the database</li>
-                <li><strong>Hardhat</strong> — local EVM node</li>
-                <li><strong>Midnight</strong> — node + indexer + proof server</li>
-              </ul>
-              <ul>
-                <li><strong>Sync node</strong> — indexes both chains</li>
-                <li><strong>Batcher</strong> — accepts signed inputs</li>
-                <li><strong>Frontend</strong> — the React dApp</li>
-              </ul>
+            <h2>It launches <em>everything</em> for you — in order</h2>
+            <p class="small muted" style="margin-bottom:0.5em;">The orchestrator runs the whole dependency graph from that one command:</p>
+            <div class="flow small">
+              <span class="node">🗄️ Database</span>
+              <span class="arrow">→</span>
+              <span class="node">⛓️ Chains<br/><span class="muted" style="font-size:0.8em">Hardhat · Midnight node, indexer, proof server</span></span>
+              <span class="arrow">→</span>
+              <span class="node">🔨 Compile<br/><span class="muted" style="font-size:0.8em">EVM + Compact</span></span>
+              <span class="arrow">→</span>
+              <span class="node">🚀 Deploy<br/><span class="muted" style="font-size:0.8em">contracts</span></span>
+              <span class="arrow">→</span>
+              <span class="node">📜 Your custom scripts</span>
+              <span class="arrow">→</span>
+              <span class="node">🖥️ Dev tools + frontend</span>
             </div>
-            <p class="small">The <strong>orchestrator</strong> wires these in dependency order — e.g. contracts deploy only once their chain is ready. Zero manual setup.</p>
-            <p class="small muted">Frontend → <code>localhost:10599</code> · API → <code>localhost:9999</code> · Batcher → <code>localhost:3334</code></p>
+            <p class="small" style="margin:0.4em 0;"><span style="color:var(--purple)">▼</span> &nbsp;waits until every dependency is ready&nbsp; <span style="color:var(--purple)">▼</span></p>
+            <div class="layer engine" style="width:80%; margin:0 auto; border-radius:14px; padding:0.6em 0.9em;">
+              <span class="lbl" style="font-size:0.5em; letter-spacing:0.08em; text-transform:uppercase; color:var(--text-tertiary); display:block;">then starts the EffectStream node</span>
+              <strong>⚡ Sync service</strong> &nbsp;·&nbsp; State machine &nbsp;·&nbsp; API
+            </div>
+            <p class="small muted" style="margin-top:0.5em;">You declare this graph once in config — no manual wiring, no "start these 8 terminals."</p>
             <aside class="notes">
-              While it boots: that one command just started six things — a database, a local EVM chain, the full
-              Midnight stack with its proof server, our sync node, the batcher, and a React frontend. The orchestrator
-              knows the dependency graph, so contract deployment waits for its chain. This normally takes a small team
-              and a page of docs; here it's one line.
+              This is the developer-experience payoff — say it out loud. Normally you'd hand-wire all this: start a
+              database, spin up each chain's node and indexer, run the proof server, compile your contracts, deploy
+              them, run any seed/custom scripts, launch dev tools and the frontend — and only THEN start your indexer,
+              in the right order, each waiting on the last. The orchestrator does the entire dependency graph for you
+              from one command, and once everything's ready it starts the EffectStream node — the sync service that
+              reads the chains, the state machine, and the API. You declare the graph once in config; the engine runs it.
             </aside>
           </section>
 
